@@ -20,6 +20,10 @@ of a valid ArcGIS Online token.
     * This package requires that you provide a
     [valid token](https://developers.arcgis.com/rest/geocode/api-reference/geocoding-authenticate-a-request.htm)
 
+***This package does not provide a unique reverseQuery mechanism, so a composer
+dependency exists on geocoder-php/arcgis-online-provider in order to leverage
+the function in that package.***
+
 ### Usage
 
 ```php

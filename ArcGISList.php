@@ -21,6 +21,7 @@ use Geocoder\Exception\InvalidServerResponse;
 use Geocoder\Exception\UnsupportedOperation;
 use Geocoder\Model\Address;
 use Geocoder\Model\AddressCollection;
+use Geocoder\Provider\ArcGISOnline;
 use Geocoder\Query\GeocodeQuery;
 use Geocoder\Query\ReverseQuery;
 use Geocoder\Http\Provider\AbstractHttpProvider;
@@ -135,6 +136,15 @@ final class ArcGISList extends AbstractHttpProvider implements Provider
         }
 
         return new AddressCollection($results);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function reverseQuery(ReverseQuery $query): Collection
+    {
+      // There is no unique difference here, just use the existing provider.
+      return ArcGISOnline::reverseQuery($query);
     }
 
     /**

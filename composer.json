@@ -17,6 +17,7 @@
     ],
     "require": {
         "php": "^7.2",
+        "geocoder-php/arcgis-online-provider": "^4.1",
         "geocoder-php/common-http": "^4.0",
         "willdurand/geocoder": "^4.0"
     },
