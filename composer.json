@@ -1,7 +1,7 @@
 {
-    "name": "wantell/arcgis-online-provider",
+    "name": "wantell/arcgis-geocode-addresses",
     "type": "library",
-    "description": "Rewrite of Geocoder ArcGIS Online to use geocodeAddresses",
+    "description": "Token and geocodeAddresses integration for ArcGIS provider",
     "keywords": [],
     "homepage": "https://www.plan-sys.com/",
     "license": "MIT",
