@@ -2,13 +2,10 @@
 
 declare(strict_types=1);
 
-/** WIP
+/**
  * This file is a modified version of geocoder-php/arcgis-online-provider,
- * modified to accept multiple addresses and use the geocodeAddresses endpoint:
+ * modified to use the geocodeAddresses endpoint:
  * https://developers.arcgis.com/rest/geocode/api-reference/geocoding-geocode-addresses.htm
- *
- * Use of this endpoint requires an ArcGIS World Geocoding Service token:
- * https://developers.arcgis.com/rest/geocode/api-reference/geocoding-authenticate-a-request.htm
  *
  * @license    MIT License
  */
@@ -40,6 +37,9 @@ final class ArcGISList extends AbstractHttpProvider implements Provider
 
     /**
      * @var string
+     *
+     * Currently valid ArcGIS World Geocoding Service token.
+     * https://developers.arcgis.com/rest/geocode/api-reference/geocoding-authenticate-a-request.htm
      */
     private $token;
 
@@ -54,6 +54,8 @@ final class ArcGISList extends AbstractHttpProvider implements Provider
      *
      * @param HttpClient $client        An HTTP adapter
      * @param string     $token         Your authentication token
+     * @param string     $client_id     Your authentication token
+     * @param string     $client_secret Your authentication token
      * @param string     $sourceCountry Country biasing (optional)
      *
      * @return GoogleMaps
@@ -96,7 +98,41 @@ final class ArcGISList extends AbstractHttpProvider implements Provider
             throw new InvalidArgument('Address cannot be empty.');
         }
 
-        $url = sprintf(self::ENDPOINT_URL, $token, urlencode($address));
+        // Build the addresses parameter json, using the SingleLine attribute
+        // for the $address value provided by $query.
+        //
+        // Even though we can send up to 1,000 addresses for bulk geocoding,
+        // $query will only contain one address.
+        // If this were to change, the commented code following this declaration
+        // would be used.
+        $addresses = [
+          'records' => [
+            [
+              'attributes' => [
+                'OBJECTID' => 1,
+                'SingleLine' => $address,
+              ],
+            ],
+          ],
+        ];
+        // $addresses = [
+        //   'records' => [],
+        // ];
+        // $i = 1;
+        // foreach ($ADDRESS_COLLECTION as $address) {
+        //   $addresses['records'][] = [
+        //     'attributes' => [
+        //       'OBJECTID' => $i++,
+        //       'SingleLine' => $address,
+        //     ],
+        //   ];
+        // }
+
+        $url = sprintf(
+          self::ENDPOINT_URL,
+          $this->token,
+          urlencode(json_encode($addresses))
+        );
         $json = $this->executeQuery($url, $query->getLimit());
 
         // no result
@@ -106,32 +142,13 @@ final class ArcGISList extends AbstractHttpProvider implements Provider
 
         $results = [];
         foreach ($json->locations as $location) {
-            $data = $location->feature->attributes;
 
-            $coordinates = (array) $location->feature->geometry;
-            $streetName = !empty($data->StAddr) ? $data->StAddr : null;
-            $streetNumber = !empty($data->AddNum) ? $data->AddNum : null;
-            $city = !empty($data->City) ? $data->City : null;
-            $zipcode = !empty($data->Postal) ? $data->Postal : null;
-            $countryCode = !empty($data->Country) ? $data->Country : null;
-
-            $adminLevels = [];
-            foreach (['Region', 'Subregion'] as $i => $property) {
-                if (!empty($data->{$property})) {
-                    $adminLevels[] = ['name' => $data->{$property}, 'level' => $i + 1];
-                }
-            }
+            $coordinates = (array) $location->location;
 
             $results[] = Address::createFromArray([
                 'providedBy' => $this->getName(),
                 'latitude' => $coordinates['y'],
                 'longitude' => $coordinates['x'],
-                'streetNumber' => $streetNumber,
-                'streetName' => $streetName,
-                'locality' => $city,
-                'postalCode' => $zipcode,
-                'adminLevels' => $adminLevels,
-                'countryCode' => $countryCode,
             ]);
         }
 
